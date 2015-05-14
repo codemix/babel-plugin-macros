@@ -1,0 +1,4 @@
+--reporter=spec
+--harmony
+--require should
+--require ./test-polyfill.js
