@@ -4,6 +4,8 @@ This is a [Babel](https://babeljs.io/) plugin adds support for hygienic, non-syn
 
 [![Build Status](https://travis-ci.org/codemix/babel-plugin-macros.svg)](https://travis-ci.org/codemix/babel-plugin-macros)
 
+> Note: Now requires Babel 6.
+
 # What?
 
 Turns code like this:
