@@ -28,21 +28,21 @@ export default function build (babel: Object): Object {
     const paramReferenceCounts = {};
     const references = Object.create(null);
     macroPath.traverse({
-      enter () {
-        if (this.isFunction()) {
-          this.traverse({
+      enter (path) {
+        if (path.isFunction()) {
+          path.traverse({
             enter (child, parent) {
-              if (this.isVariableDeclarator() || this.isFunctionDeclaration()) {
+              if (path.isVariableDeclarator() || path.isFunctionDeclaration()) {
                 references[child.id.name] = true;
               }
-              else if (this.isIdentifier() && (!t.isFunction(parent) || (parent.type === "ArrowFunctionExpression" && parent.body === child)) && (!t.isMemberExpression(parent) || parent.object === child) && ~paramNames.indexOf(child.name)) {
+              else if (path.isIdentifier() && (!t.isFunction(parent) || (parent.type === "ArrowFunctionExpression" && parent.body === child)) && (!t.isMemberExpression(parent) || parent.object === child) && ~paramNames.indexOf(child.name)) {
                 paramReferenceCounts[child.name] = paramReferenceCounts[child.name] || 0;
                 paramReferenceCounts[child.name]++;
               }
             }
           });
         }
-        this.skip();
+        path.skip();
       }
     });
     return function (path) {
@@ -63,7 +63,8 @@ export default function build (babel: Object): Object {
       let hasEarlyReturn = false;
 
       traverse(cloned, {
-        enter (child, parent) {
+        enter (subPath) {
+          const {node: child, parent} = subPath;
           if (
             child.type === 'Identifier' &&
             (parent.type !== "MemberExpression" || parent.object === child || (parent.computed && parent.property === child))
@@ -75,7 +76,7 @@ export default function build (babel: Object): Object {
                 param.replacement.type === 'Literal' ||
                 (paramReferenceCounts[child.name] === 1 && param.replacement.type === 'MemberExpression')
               ) {
-                this.replaceWith(param.replacement);
+                subPath.replaceWith(param.replacement);
                 seen[child.name] = param.replacement;
               }
               else {
@@ -88,41 +89,41 @@ export default function build (babel: Object): Object {
                     ])
                   ]);
                 }
-                this.replaceWith(seen[child.name]);
+                subPath.replaceWith(seen[child.name]);
               }
             }
             else if (references[child.name]) {
               if (!seen[child.name]) {
                 seen[child.name] = path.scope.generateUidIdentifier(child.name);
               }
-              this.replaceWith(seen[child.name])
+              subPath.replaceWith(seen[child.name])
             }
           }
-          else if (this.isReturnStatement()) {
+          else if (subPath.isReturnStatement()) {
             if (blockStack.length > 0) {
               hasEarlyReturn = true;
             }
-            returnStatements.push([this, child]);
+            returnStatements.push([subPath, child]);
           }
-          else if (this.isLoop()) {
-            loopStack.push(this);
+          else if (subPath.isLoop()) {
+            loopStack.push(subPath);
           }
-          else if (this.isFunction()) {
-            this.skip();
+          else if (subPath.isFunction()) {
+            subPath.skip();
           }
-          else if (this.isScope()) {
-            blockStack.push(this);
+          else if (subPath.isScope()) {
+            blockStack.push(subPath);
           }
         },
-        exit () {
-          if (this.isLoop()) {
+        exit (path) {
+          if (path.isLoop()) {
             loopStack.pop();
           }
-          else if (this.isScope()) {
+          else if (path.isScope()) {
             blockStack.pop();
           }
         }
-      }, {scope: path.scope});
+      }, path.scope);
 
 
       if (t.isStatement(cloned.body)) {
@@ -200,7 +201,8 @@ export default function build (babel: Object): Object {
 
   const visitors = {
     CallExpression: {
-      enter (node, parent, scope) {
+      enter (path) {
+        const node = path.node;
         if (t.isMemberExpression(node.callee)) {
           if (
             !node.callee.computed &&
@@ -217,22 +219,24 @@ export default function build (babel: Object): Object {
         else {
           const macro = getMacro(node.callee);
           if (macro) {
-            runMacro(this, macro);
+            runMacro(path, macro);
           }
         }
       },
-      exit (node, parent, scope) {
+      exit (path) {
+        const node = path.node;
         if (node._needsVisit) {
           node._needsVisit = false;
-          this.traverse(visitors);
+          path.traverse(visitors);
         }
       }
     },
     Program: {
-      exit (node) {
-        if (!this._macrosProcessed) {
-          this._macrosProcessed = true;
-          this.traverse(visitors);
+      exit (path) {
+        const node = path.node;
+        if (!node._macrosProcessed) {
+          node._macrosProcessed = true;
+          path.traverse(visitors);
         }
       }
     }
@@ -242,6 +246,6 @@ export default function build (babel: Object): Object {
   /**
    * Export the transformer.
    */
-  return new Transformer("macros", visitors);
+  return {visitor: visitors};
 
 }

@@ -1,6 +1,6 @@
 import Plugin from '../src';
 import fs from 'fs';
-import {parse, transform, traverse, types as t} from 'babel';
+import {parse, transform, traverse, types as t} from 'babel-core';
 
 
 function load (basename: string): string {
@@ -10,14 +10,14 @@ function load (basename: string): string {
 
 function runTest (basename: string, expectedResult: mixed, args: Array = []): void {
   const source = load(basename);
-  const transformed = transform(source, {stage: 0, plugins: [Plugin]});
+  const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
   // console.log(transformed.code);
   const context = {
     exports: {}
   };
   const loaded = new Function('module', 'exports', transformed.code);
   loaded(context, context.exports);
-  const result = typeof context.exports === 'function' ? context.exports(...args) : context.exports;
+  const result = typeof context.exports.default === 'function' ? context.exports.default(...args) : context.exports.default;
   result.should.eql(expectedResult);
 }
 
@@ -57,5 +57,8 @@ describe('Babel Macros', function () {
   run("map", [2, 3, 4, 5]);
   run("map-filter", [2, 3, 4, 5]);
   run("some", true);
+  run("redefine", "baz");
+  run("hoisting", "barbaz");
+  run("functions", "ARROW.ANONYMOUS.NAMED");
 });
 
