@@ -11,7 +11,7 @@ function load (basename: string): string {
 function runTest (basename: string, expectedResult: mixed, args: Array = []): void {
   const source = load(basename);
   const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
-  // console.log(transformed.code);
+   //console.log(transformed.code);
   const context = {
     exports: {}
   };
@@ -60,5 +60,6 @@ describe('Babel Macros', function () {
   run("redefine", "baz");
   run("hoisting", "barbaz");
   run("functions", "ARROW.ANONYMOUS.NAMED");
+  run("unique-local-names", "foo1.undefined.foo-main");
 });
 

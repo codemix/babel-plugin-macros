@@ -31,11 +31,12 @@ export default function build (babel: Object): Object {
       enter (path) {
         if (path.isFunction()) {
           path.traverse({
-            enter (child, parent) {
-              if (path.isVariableDeclarator() || path.isFunctionDeclaration()) {
+            enter (subPath) {
+              const {node: child, parent} = subPath;
+              if (subPath.isVariableDeclarator() || subPath.isFunctionDeclaration()) {
                 references[child.id.name] = true;
               }
-              else if (path.isIdentifier() && (!t.isFunction(parent) || (parent.type === "ArrowFunctionExpression" && parent.body === child)) && (!t.isMemberExpression(parent) || parent.object === child) && ~paramNames.indexOf(child.name)) {
+              else if (subPath.isIdentifier() && (!t.isFunction(parent) || (parent.type === "ArrowFunctionExpression" && parent.body === child)) && (!t.isMemberExpression(parent) || parent.object === child) && ~paramNames.indexOf(child.name)) {
                 paramReferenceCounts[child.name] = paramReferenceCounts[child.name] || 0;
                 paramReferenceCounts[child.name]++;
               }
