@@ -61,5 +61,6 @@ describe('Babel Macros', function () {
   run("hoisting", "barbaz");
   run("functions", "ARROW.ANONYMOUS.NAMED");
   run("unique-local-names", "foo1.undefined.foo-main");
+  run("not-passed-args", "123.undefined");
 });
 

@@ -51,7 +51,7 @@ export default function build (babel: Object): Object {
       const [params, seen] = cloned.params.reduce(([params, seen], id, index) => {
         params[id.name] = {
           id: id,
-          replacement: path.node.arguments[index],
+          replacement: path.node.arguments[index] || t.identifier('undefined'),
           reference: null
         };
         seen[id.name] = false;
