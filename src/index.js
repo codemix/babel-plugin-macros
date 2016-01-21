@@ -4,7 +4,7 @@ import _ from 'lodash';
  * # Babel Macros
  */
 export default function build (babel: Object): Object {
-  const {Transformer, types: t, traverse} = babel;
+  const {types: t, traverse} = babel;
 
   /**
    * A list of registered macros.
