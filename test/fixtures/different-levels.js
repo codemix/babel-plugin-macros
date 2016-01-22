@@ -44,6 +44,25 @@ const child = (function() {
   };
 })();
 
+const child1 = (function() {
+  return function() {
+    DEFINE_MACRO(innerNotCalled, function innerNotCalled() {
+      DEFINE_MACRO(FOO, function() {
+        return 'child level used';
+      });
+    });
+    try {
+      return FOO();
+    } catch(e) {
+      if(e.message === 'FOO is not defined') {
+        return 'child level cannot used';
+      } else {
+        throw e;
+      }
+    }
+  };
+})();
+
 export default function demo () {
-  return [parent0(), parent1(), parent2(), child()];
+  return [parent0(), parent1(), parent2(), child(), child1()];
 }

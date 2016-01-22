@@ -17,7 +17,12 @@ function runTest (basename: string, expectedResult: mixed, args: Array = []): vo
   };
   const loaded = new Function('module', 'exports', transformed.code);
   loaded(context, context.exports);
-  const result = typeof context.exports.default === 'function' ? context.exports.default(...args) : context.exports.default;
+  var result;
+  try {
+    result = typeof context.exports.default === 'function' ? context.exports.default(...args) : context.exports.default;
+  } catch(e) {
+    result = e;
+  }
   result.should.eql(expectedResult);
 }
 
@@ -62,10 +67,13 @@ describe('Babel Macros', function () {
   run("functions", ["ARROW", "ANONYMOUS", "NAMED"]);
   run("unique-local-names", ["foo1", undefined, "foo-main"]);
   run("not-passed-args", [123, undefined]);
-  run("define-after-using", ["before", "after"]);
+  run("define-after-using", [["before", "after"], ["before", "after"]]);
   run("scoped", ["foo", "bar"]);
-  run("different-levels", ["same level used", "parent level used", "parent-parent level used", "child level cannot used"]);
+  run("different-levels", ["same level used", "parent level used", "parent-parent level used", "child level cannot used", "child level cannot used"]);
   run("macro-call-in-macro", ["foo", "bar"]);
   run("macro-defined-in-macro", ["foo", "bar"]);
+  run("wrong-scoped", new Error('qwe'));
+  run("redefine-submacro-in-call-scope", [["foo", "bar", "quux"], ["baz", "bat", "quux"]]);
+  run("define-after-using-scoped", ["inner", "inner"]);
 });
 
