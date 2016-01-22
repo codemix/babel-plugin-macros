@@ -64,5 +64,6 @@ describe('Babel Macros', function () {
   run("not-passed-args", [123, undefined]);
   run("define-after-using", ["before", "after"]);
   run("scoped", ["foo", "bar"]);
+  run("different-levels", ["same level used", "parent level used", "parent-parent level used", "child level cannot used"]);
 });
 
