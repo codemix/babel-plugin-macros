@@ -62,6 +62,7 @@ describe('Babel Macros', function () {
   run("functions", ["ARROW", "ANONYMOUS", "NAMED"]);
   run("unique-local-names", ["foo1", undefined, "foo-main"]);
   run("not-passed-args", [123, undefined]);
-  run("define-after-using", ['before', 'after']);
+  run("define-after-using", ["before", "after"]);
+  run("scoped", ["foo", "bar"]);
 });
 

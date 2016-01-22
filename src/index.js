@@ -7,11 +7,6 @@ export default function build (babel: Object): Object {
   const {types: t, traverse} = babel;
 
   /**
-   * A list of registered macros.
-   */
-  const registered = Object.create(null);
-
-  /**
    * A list of builtin macros.
    */
   const builtin = Object.create(null);
@@ -19,7 +14,8 @@ export default function build (babel: Object): Object {
   builtin.DEFINE_MACRO = function defineMacro (path) {
     const {node} = path;
     const id = node.arguments[0];
-    registered[id.name] = compileMacro(id.name, node.arguments[1], path);
+    path.scope._registeredMacros = path.scope._registeredMacros || {};
+    path.scope._registeredMacros[id.name] = compileMacro(id.name, node.arguments[1], path);
     path.remove();
   };
 
@@ -182,20 +178,23 @@ export default function build (babel: Object): Object {
     return input.toLowerCase().replace(/_(.)/g, (match, char) => char.toUpperCase());
   }
 
-  function getMacro (node: Object): boolean {
+  function getMacro (node: Object, scope: Object): boolean {
     if (node.type === 'CallExpression') {
-      return getMacro(node.callee);
+      return getMacro(node.callee, scope);
     }
     else if (t.isIdentifier(node)) {
-      if (registered[node.name]) {
-        return registered[node.name];
+      while(scope) {
+        if (scope._registeredMacros && scope._registeredMacros[node.name]) {
+          return scope._registeredMacros[node.name];
+        }
+        scope = scope.parent;
       }
-      else if (builtin[node.name]) {
+      if (builtin[node.name]) {
        return builtin[node.name];
       }
     }
     else if (t.isMemberExpression(node) && !node.computed && t.isIdentifier(node.property)) {
-      return getMacro(node.property);
+      return getMacro(node.property, scope);
     }
   }
 
@@ -207,8 +206,8 @@ export default function build (babel: Object): Object {
         if (t.isMemberExpression(node.callee)) {
           if (
             !node.callee.computed &&
-            getMacro(node.callee.object) &&
-            getMacro(node.callee.property)
+            getMacro(node.callee.object, path.scope) &&
+            getMacro(node.callee.property, path.scope)
           ) {
             node._needsVisit = true;
             const head = node.callee.object;
@@ -218,9 +217,9 @@ export default function build (babel: Object): Object {
           }
         }
         else {
-          const macro = getMacro(node.callee);
+          const macro = getMacro(node.callee, path.scope);
           if (macro) {
-            runMacro(path, macro);
+            runMacro(path, macro, path.scope);
           }
         }
       },
