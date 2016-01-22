@@ -55,7 +55,7 @@ describe('Babel Macros', function () {
   run("double", 492);
   run("triple", 738);
   run("map", [2, 3, 4, 5]);
-  run("map-filter", [2, 3, 4, 5]);
+  run("map-filter", [[2, 3, 4, 5], [4, 5]]);
   run("some", true);
   run("redefine", "baz");
   run("hoisting", ["bar", "baz"]);
