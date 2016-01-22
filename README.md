@@ -76,7 +76,7 @@ Because macros are incredibly useful! Also because they make it easy to write ex
 - [ ] Refactor for readability
 - [ ] Allow macros to be imported and exported across files.
 - [ ] Add `DEFINE_TRANSFORM` which is similar to `DEFINE_MACRO` but allows direct AST manipulation, not merely replacement.
-- [x] Implement function inlining for macro arguments (in the map example above, the `_visitor` function body should be inlined, removing the function entirely).
+- [ ] Implement function inlining for macro arguments (in the map example above, the `_visitor` function body should be inlined, removing the function entirely).
 
 # Installation
 
