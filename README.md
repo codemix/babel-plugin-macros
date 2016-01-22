@@ -76,7 +76,7 @@ Because macros are incredibly useful! Also because they make it easy to write ex
 - [ ] Refactor for readability
 - [ ] Allow macros to be imported and exported across files.
 - [ ] Add `DEFINE_TRANSFORM` which is similar to `DEFINE_MACRO` but allows direct AST manipulation, not merely replacement.
-- [ ] Implement function inlining for macro arguments (in the map example above, the `_visitor` function body should be inlined, removing the function entirely).
+- [x] Implement function inlining for macro arguments (in the map example above, the `_visitor` function body should be inlined, removing the function entirely).
 
 # Installation
 
@@ -91,6 +91,15 @@ Then, in your babel configuration (usually in your `.babelrc` file), add `"macro
 }
 ```
 
+# ChangeLog
+- **0.0.1** base implementation
+- **1.0.0** update for babel@6 API
+- **1.0.1** fix npm package
+- **1.0.2** fix crash when missed some arguments
+- **1.0.3** fix behavior of same-name macros in different scopes.
+before this change same-name macros are re-declared.
+now macros in different scopes - are different macros.
+- **1.0.3** fix behavior of same-name macros in different scopes
 
 # License
 
