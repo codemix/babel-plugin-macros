@@ -65,5 +65,7 @@ describe('Babel Macros', function () {
   run("define-after-using", ["before", "after"]);
   run("scoped", ["foo", "bar"]);
   run("different-levels", ["same level used", "parent level used", "parent-parent level used", "child level cannot used"]);
+  run("macro-call-in-macro", ["foo", "bar"]);
+  run("macro-defined-in-macro", ["foo", "bar"]);
 });
 
