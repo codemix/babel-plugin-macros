@@ -91,6 +91,14 @@ Then, in your babel configuration (usually in your `.babelrc` file), add `"macro
 }
 ```
 
+# ChangeLog
+- **0.0.1** base implementation
+- **1.0.0** update for babel@6 API
+- **1.0.1** fix npm package
+- **1.0.2** fix crash when missed some arguments
+- **1.0.3** fix behavior of same-name macros in different scopes.
+   before this change same-name macros are re-declared.
+   now macros in different scopes - are different macros.
 
 # License
 
