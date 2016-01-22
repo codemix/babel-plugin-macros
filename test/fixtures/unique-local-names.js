@@ -9,5 +9,5 @@ DEFINE_MACRO(FOO2, () => {
 
 export default function demo () {
   var foo = 'foo-main';
-  return [String(FOO1()), String(FOO2()), String(foo)].join('.');
+  return [FOO1(), FOO2(), foo];
 }

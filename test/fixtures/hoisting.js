@@ -14,5 +14,5 @@ const {bar, baz} = (function () {
 })();
 
 export default function demo() {
-  return bar() + baz();
+  return [bar(), baz()];
 }

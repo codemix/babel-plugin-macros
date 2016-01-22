@@ -58,9 +58,10 @@ describe('Babel Macros', function () {
   run("map-filter", [2, 3, 4, 5]);
   run("some", true);
   run("redefine", "baz");
-  run("hoisting", "barbaz");
-  run("functions", "ARROW.ANONYMOUS.NAMED");
-  run("unique-local-names", "foo1.undefined.foo-main");
-  run("not-passed-args", "123.undefined");
+  run("hoisting", ["bar", "baz"]);
+  run("functions", ["ARROW", "ANONYMOUS", "NAMED"]);
+  run("unique-local-names", ["foo1", undefined, "foo-main"]);
+  run("not-passed-args", [123, undefined]);
+  run("define-after-using", ['before', 'after']);
 });
 

@@ -7,5 +7,5 @@ DEFINE_MACRO(NAMED, function NAMED() {
 });
 
 export default function demo() {
-  return [ARROW(), ANONYMOUS(), NAMED()].join('.');
+  return [ARROW(), ANONYMOUS(), NAMED()];
 }
