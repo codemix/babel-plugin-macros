@@ -10,39 +10,63 @@ export default function build (babel: Object): Object {
    * A list of builtin macros.
    */
   const builtin = Object.create(null);
+  class Macro {
+    constructor({name, macroBody, scope, state}) {
+      this.name = name;
+      this.macroBody = macroBody;
+      this.scope = scope;
+      this.state = state;
+    }
+    run(path, scope, state) {
+      if(!this.macro) {
+        this.macro = compileMacro(this.name, this.macroBody, this.scope, this.state);
+      }
+      return this.macro(path, scope, state);
+    }
+  }
 
-  builtin.DEFINE_MACRO = function defineMacro (path) {
+  builtin.DEFINE_MACRO = function defineMacro (path, scope, state) {
     const {node} = path;
-    const id = node.arguments[0];
-    path.scope._registeredMacros = path.scope._registeredMacros || {};
-    path.scope._registeredMacros[id.name] = compileMacro(id.name, node.arguments[1], path);
+    const name = node.arguments[0].name;
+    const macroBody = node.arguments[1];
+    //TODO throw new Error('first argument for DEFINE_MACRO - is Identifier');//TODO test
+    var subScope;
+    traverse(node, {
+      enter(path) {
+        if(path.node === macroBody) {
+          subScope = path.scope;
+          path.skip();
+        }
+      }
+    }, scope);
+    scope._registeredMacros = scope._registeredMacros || {};
+    scope._registeredMacros[name] = new Macro({name: name, macroBody, scope:subScope, state});
+    traverse(macroBody, visitors, subScope, state);
     path.remove();
   };
 
-  function compileMacro (name: string, node: Object, macroPath: Object): Function {
+  function compileMacro (name: string, node: Object, scope: Object, state: Object): Function {
     const paramNames = node.params.map(param => param.name);
     const paramReferenceCounts = {};
     const references = Object.create(null);
-    macroPath.traverse({
-      enter (path) {
-        if (path.isFunction()) {
-          path.traverse({
-            enter (subPath) {
-              const {node: child, parent} = subPath;
-              if (subPath.isVariableDeclarator() || subPath.isFunctionDeclaration()) {
-                references[child.id.name] = true;
-              }
-              else if (subPath.isIdentifier() && (!t.isFunction(parent) || (parent.type === "ArrowFunctionExpression" && parent.body === child)) && (!t.isMemberExpression(parent) || parent.object === child) && ~paramNames.indexOf(child.name)) {
-                paramReferenceCounts[child.name] = paramReferenceCounts[child.name] || 0;
-                paramReferenceCounts[child.name]++;
-              }
-            }
-          });
+    if (t.isFunction(node)) {
+      traverse(node, visitors, scope, state);
+      traverse(node, {
+        enter (subPath) {
+          const {node: child, parent} = subPath;
+          if (subPath.isVariableDeclarator() || subPath.isFunctionDeclaration()) {
+            references[child.id.name] = true;
+          }
+          else if (subPath.isIdentifier() && (!t.isFunction(parent) || (parent.type === "ArrowFunctionExpression" && parent.body === child)) && (!t.isMemberExpression(parent) || parent.object === child) && ~paramNames.indexOf(child.name)) {
+            paramReferenceCounts[child.name] = paramReferenceCounts[child.name] || 0;
+            paramReferenceCounts[child.name]++;
+          }
         }
-        path.skip();
-      }
-    });
-    return function (path) {
+      }, scope);
+    } else {
+      throw new Error('second argument for DEFINE_MACRO - is FunctionExpression or ArrowFunctionExpression');//TODO test
+    }
+    return function (path, scope, state) {
       const cloned = _.cloneDeep(node);
       const [params, seen] = cloned.params.reduce(([params, seen], id, index) => {
         params[id.name] = {
@@ -155,8 +179,12 @@ export default function build (babel: Object): Object {
     };
   }
 
-  function runMacro (path, macro) {
-    macro(path);
+  function runMacro (path, macro, scope, state) {
+    if('function' === typeof macro) {
+      macro(path, scope, state)
+    } else {
+      macro.run(path, scope, state)
+    }
   }
 
 
@@ -178,65 +206,79 @@ export default function build (babel: Object): Object {
     return input.toLowerCase().replace(/_(.)/g, (match, char) => char.toUpperCase());
   }
 
-  function getMacro (node: Object, scope: Object): boolean {
+  function getMacro (node: Object, scope: Object, state: Object): boolean {
     if (node.type === 'CallExpression') {
-      return getMacro(node.callee, scope);
+      return getMacro(node.callee, scope, state);
     }
     else if (t.isIdentifier(node)) {
-      while(scope) {
-        if (scope._registeredMacros && scope._registeredMacros[node.name]) {
-          return scope._registeredMacros[node.name];
+      if(state._codemixMacros.macrosDefined) {
+        while(scope) {
+          if (scope._registeredMacros && scope._registeredMacros[node.name]) {
+            return scope._registeredMacros[node.name];
+          }
+          scope = scope.parent;
         }
-        scope = scope.parent;
       }
       if (builtin[node.name]) {
        return builtin[node.name];
       }
     }
     else if (t.isMemberExpression(node) && !node.computed && t.isIdentifier(node.property)) {
-      return getMacro(node.property, scope);
+      return getMacro(node.property, scope, state);
     }
   }
 
 
   const visitors = {
     CallExpression: {
-      enter (path) {
+      enter (path, state) {
         const node = path.node;
-        if (t.isMemberExpression(node.callee)) {
-          if (
-            !node.callee.computed &&
-            getMacro(node.callee.object, path.scope) &&
-            getMacro(node.callee.property, path.scope)
-          ) {
-            node._needsVisit = true;
-            const head = node.callee.object;
-            const tailId = node.callee.property;
-            node.callee = tailId;
-            node.arguments.unshift(head);
+        if(state._codemixMacros.macrosDefined) {
+          if (node._processedByMacro) {
+            return;
           }
+          node._processedByMacro = true;
+        }
+        if (t.isMemberExpression(node.callee)) {
+          // TODO temp locked for refactoring. need another idea for chaining more than 2 macros
+          //if (
+          //  !node.callee.computed &&
+          //  getMacro(node.callee.object, path.scope, state) &&
+          //  getMacro(node.callee.property, path.scope, state)
+          //) {
+          //  node._needsVisit = true;
+          //  const head = node.callee.object;
+          //  const tailId = node.callee.property;
+          //  node.callee = tailId;
+          //  node.arguments.unshift(head);
+          //}
         }
         else {
-          const macro = getMacro(node.callee, path.scope);
+          const macro = getMacro(node.callee, path.scope, state);
           if (macro) {
-            runMacro(path, macro, path.scope);
+            runMacro(path, macro, path.scope, state);
           }
         }
       },
-      exit (path) {
-        const node = path.node;
-        if (node._needsVisit) {
-          node._needsVisit = false;
-          path.traverse(visitors);
-        }
+      exit (path, state) {
+        //// TODO temp locked for refactoring. need another idea for chaining more than 2 macros
+        //const node = path.node;
+        //if (node._needsVisit) {
+        //  node._needsVisit = false;
+        //  path.traverse(visitors, state);
+        //}
       }
     },
     Program: {
-      exit (path) {
-        const node = path.node;
-        if (!node._macrosProcessed) {
-          node._macrosProcessed = true;
-          path.traverse(visitors);
+      enter (path, state) {
+        state._codemixMacros = {
+          macrosDefined: false
+        };
+      },
+      exit (path, state) {
+        if (!state._codemixMacros.macrosDefined) {
+          state._codemixMacros.macrosDefined = true;
+          path.traverse(visitors, state);
         }
       }
     }
