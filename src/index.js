@@ -102,7 +102,7 @@ export default function build (babel: Object): Object {
               }
               else {
                 if (!seen[child.name]) {
-                  seen[child.name] = path.scope.generateUidIdentifier(child.name);
+                  seen[child.name] = scope.generateUidIdentifier(child.name);
 
                   getParentBlock(path).insertBefore([
                     t.variableDeclaration('const', [
@@ -115,7 +115,7 @@ export default function build (babel: Object): Object {
             }
             else if (references[child.name]) {
               if (!seen[child.name]) {
-                seen[child.name] = path.scope.generateUidIdentifier(child.name);
+                seen[child.name] = scope.generateUidIdentifier(child.name);
               }
               subPath.replaceWith(seen[child.name])
             }
@@ -144,12 +144,12 @@ export default function build (babel: Object): Object {
             blockStack.pop();
           }
         }
-      }, path.scope);
+      }, scope);
 
 
       if (t.isStatement(cloned.body)) {
-        const uid = path.scope.generateUidIdentifier(camelCase(name));
-        const labelUid = path.scope.generateUidIdentifier('_' + name.toUpperCase());
+        const uid = scope.generateUidIdentifier(camelCase(name));
+        const labelUid = scope.generateUidIdentifier('_' + name.toUpperCase());
         const parentBlock = getParentBlock(path);
         parentBlock.insertBefore([
           t.variableDeclaration('let', [
@@ -241,17 +241,19 @@ export default function build (babel: Object): Object {
         }
         if (t.isMemberExpression(node.callee)) {
           // TODO temp locked for refactoring. need another idea for chaining more than 2 macros
-          //if (
-          //  !node.callee.computed &&
-          //  getMacro(node.callee.object, path.scope, state) &&
-          //  getMacro(node.callee.property, path.scope, state)
-          //) {
-          //  node._needsVisit = true;
-          //  const head = node.callee.object;
-          //  const tailId = node.callee.property;
-          //  node.callee = tailId;
-          //  node.arguments.unshift(head);
-          //}
+          if (
+            !node.callee.computed &&
+            getMacro(node.callee.object, path.scope, state) &&
+            getMacro(node.callee.property, path.scope, state)
+          ) {
+            const head = node.callee.object;
+            const tailId = node.callee.property;
+            node.arguments.unshift(head);//TODO - so slow. meybe is ecponent slow ?
+            const macro = getMacro(tailId, path.scope, state);
+            if (macro) {
+              runMacro(path, macro, path.scope, state);
+            }
+          }
         }
         else {
           const macro = getMacro(node.callee, path.scope, state);
@@ -259,14 +261,6 @@ export default function build (babel: Object): Object {
             runMacro(path, macro, path.scope, state);
           }
         }
-      },
-      exit (path, state) {
-        //// TODO temp locked for refactoring. need another idea for chaining more than 2 macros
-        //const node = path.node;
-        //if (node._needsVisit) {
-        //  node._needsVisit = false;
-        //  path.traverse(visitors, state);
-        //}
       }
     },
     Program: {

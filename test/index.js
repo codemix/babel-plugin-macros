@@ -11,7 +11,7 @@ function load (basename: string): string {
 function runTest (basename: string, expectedResult: mixed, args: Array = []): void {
   const source = load(basename);
   const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
-   console.log(transformed.code);
+   //console.log(transformed.code);
   const context = {
     exports: {}
   };
@@ -63,7 +63,7 @@ describe('Babel Macros', function () {
   run("double", 492);
   run("triple", 738);
   run("map", [2, 3, 4, 5]);
-  //run("map-filter", [[2, 3, 4, 5], [4, 5]]);
+  run("map-filter", [[2, 3, 4, 5], [4, 5]]);
   run("some", true);
   run("redefine", "baz");
   run("hoisting", ["bar", "baz"]);
