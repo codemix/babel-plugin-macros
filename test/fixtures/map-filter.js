@@ -18,5 +18,8 @@ DEFINE_MACRO(FILTER, (input, visitor) => {
 });
 
 export default function demo () {
-  return MAP([1,2,3,4,5], item => item + 1).FILTER(a => a <= 5);
+  return [
+    MAP([1, 2, 3, 4, 5], item => item + 1).FILTER(a => a <= 5),
+    MAP([1, 2, 3, 4, 5], item => item + 1).FILTER(a => a <= 5).FILTER(a => a > 3)
+  ];
 }
