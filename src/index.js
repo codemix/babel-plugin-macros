@@ -1,5 +1,8 @@
 import _ from 'lodash';
 
+const $registeredMacros = Symbol('registeredMacros');
+const $macroState = Symbol('macroState');
+
 /**
  * # Babel Macros
  */
@@ -27,20 +30,17 @@ export default function build (babel: Object): Object {
 
   builtin.DEFINE_MACRO = function defineMacro (path, scope, state) {
     const {node} = path;
-    const name = node.arguments[0].name;
+    const id = node.arguments[0];
+    if (!(id && t.isIdentifier(id))) {
+      // @todo add test
+      throw new Error(`First argument to DEFINE_MACRO must be an identifier.`);
+    }
+    const name = id.name;
     const macroBody = node.arguments[1];
-    //TODO throw new Error('first argument for DEFINE_MACRO - is Identifier');//TODO test
-    var subScope;
-    traverse(node, {
-      enter(path) {
-        if(path.node === macroBody) {
-          subScope = path.scope;
-          path.skip();
-        }
-      }
-    }, scope);
-    scope._registeredMacros = scope._registeredMacros || {};
-    scope._registeredMacros[name] = new Macro({name: name, macroBody, scope:subScope, state});
+    const subScope = path.get('arguments')[1].scope;
+
+    scope[$registeredMacros] = scope[$registeredMacros] || {};
+    scope[$registeredMacros][name] = new Macro({name: name, macroBody, scope: subScope, state});
     traverse(macroBody, visitors, subScope, state);
     path.remove();
   };
@@ -64,7 +64,8 @@ export default function build (babel: Object): Object {
         }
       }, scope);
     } else {
-      throw new Error('second argument for DEFINE_MACRO - is FunctionExpression or ArrowFunctionExpression');//TODO test
+      // @todo add test
+      throw new Error('Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression.');
     }
     return function (path, scope, state) {
       const cloned = _.cloneDeep(node);
@@ -180,7 +181,7 @@ export default function build (babel: Object): Object {
   }
 
   function runMacro (path, macro, scope, state) {
-    if('function' === typeof macro) {
+    if(typeof macro === 'function') {
       macro(path, scope, state)
     } else {
       macro.run(path, scope, state)
@@ -211,10 +212,10 @@ export default function build (babel: Object): Object {
       return getMacro(node.callee, scope, state);
     }
     else if (t.isIdentifier(node)) {
-      if(state._codemixMacros.macrosDefined) {
+      if(state[$macroState].macrosDefined) {
         while(scope) {
-          if (scope._registeredMacros && scope._registeredMacros[node.name]) {
-            return scope._registeredMacros[node.name];
+          if (scope[$registeredMacros] && scope[$registeredMacros][node.name]) {
+            return scope[$registeredMacros][node.name];
           }
           scope = scope.parent;
         }
@@ -233,7 +234,7 @@ export default function build (babel: Object): Object {
     CallExpression: {
       enter (path, state) {
         const node = path.node;
-        if(state._codemixMacros.macrosDefined) {
+        if(state[$macroState].macrosDefined) {
           if (node._processedByMacro) {
             return;
           }
@@ -265,13 +266,13 @@ export default function build (babel: Object): Object {
     },
     Program: {
       enter (path, state) {
-        state._codemixMacros = {
+        state[$macroState] = {
           macrosDefined: false
         };
       },
       exit (path, state) {
-        if (!state._codemixMacros.macrosDefined) {
-          state._codemixMacros.macrosDefined = true;
+        if (!state[$macroState].macrosDefined) {
+          state[$macroState].macrosDefined = true;
           path.traverse(visitors, state);
         }
       }
