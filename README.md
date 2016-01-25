@@ -101,6 +101,8 @@ Then, in your babel configuration (usually in your `.babelrc` file), add `"macro
    now macros in different scopes - are different macros.
 - **1.0.4** fix wrong scoping for equal-named macros  
 fix combining more than 2 macros
+- **1.0.5** optimization. Replacement `traverse` to `get` to find the desired node
+- **1.0.6** honest exception for infinite recursion in macros
 
 # License
 

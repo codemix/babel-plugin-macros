@@ -9,24 +9,28 @@ function load (basename: string): string {
 }
 
 function runTest (basename: string, expectedResult: mixed, args: Array = []): void {
-  const source = load(basename);
-  const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
-   //console.log(transformed.code);
-  const context = {
-    exports: {}
-  };
-  const loaded = new Function('module', 'exports', transformed.code);
-  loaded(context, context.exports);
-  var result;
   try {
-    result = typeof context.exports.default === 'function' ? context.exports.default(...args) : context.exports.default;
-  } catch(e) {
-    result = e;
-  }
-  if(expectedResult instanceof Error)
-    result.message.should.eql(expectedResult.message);
-  else
+    const source = load(basename);
+    const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
+     //console.log(transformed.code);
+    const context = {
+      exports: {}
+    };
+    const loaded = new Function('module', 'exports', transformed.code);
+    loaded(context, context.exports);
+    const result = typeof context.exports.default === 'function' ? context.exports.default(...args) : context.exports.default;
+    if(expectedResult instanceof Error) {
+        throw new Error('expected error, but got result ' + JSON.stringify(result));
+    }
     result.should.eql(expectedResult);
+  } catch(e) {
+    if(expectedResult instanceof Error) {
+      e.message.should.eql(expectedResult.message);
+    }
+    else {
+      throw e;
+    }
+  }
 }
 
 function run (basename: string, expectedResult: mixed): void {
@@ -78,5 +82,8 @@ describe('Babel Macros', function () {
   run("wrong-scoped", new Error('BAR is not defined'));
   run("redefine-submacro-in-call-scope", [["foo", "bar", "quux"], ["baz", "bat", "quux"]]);
   run("define-after-using-scoped", ["inner", "inner"]);
+  run("infinite-recursion-call", new Error('unknown: Maximum call stack size exceeded'));
+  run("self-recursion-call", new Error('unknown: Maximum call stack size exceeded'));
+  run("recursive-call", ["foo", "bar"]);
 });
 

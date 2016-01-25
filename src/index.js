@@ -238,7 +238,6 @@ export default function build (babel: Object): Object {
           if (node._processedByMacro) {
             return;
           }
-          node._processedByMacro = true;
         }
         if (t.isMemberExpression(node.callee)) {
           // TODO temp locked for refactoring. need another idea for chaining more than 2 macros
@@ -249,7 +248,7 @@ export default function build (babel: Object): Object {
           ) {
             const head = node.callee.object;
             const tailId = node.callee.property;
-            node.arguments.unshift(head);//TODO - so slow. meybe is ecponent slow ?
+            node.arguments.unshift(head);//TODO - so slow. maybe is exponent slow ?
             const macro = getMacro(tailId, path.scope, state);
             if (macro) {
               runMacro(path, macro, path.scope, state);
@@ -261,6 +260,10 @@ export default function build (babel: Object): Object {
           if (macro) {
             runMacro(path, macro, path.scope, state);
           }
+        }
+
+        if(state[$macroState].macrosDefined) {
+          node._processedByMacro = true;
         }
       }
     },
