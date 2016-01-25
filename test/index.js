@@ -85,5 +85,6 @@ describe('Babel Macros', function () {
   run("infinite-recursion-call", new Error('unknown: Maximum call stack size exceeded'));
   run("self-recursion-call", new Error('unknown: Maximum call stack size exceeded'));
   run("recursive-call", ["foo", "bar"]);
+  run("no-conflict-define-scope-with-call-scope", ["foo", "bar"]);
 });
 
