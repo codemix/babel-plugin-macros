@@ -77,8 +77,8 @@ describe('Babel Macros', function () {
   run("define-after-using", [["before", "after"], ["before", "after"]]);
   run("scoped", ["foo", "bar"]);
   run("different-levels", ["same level used", "parent level used", "parent-parent level used", "child level cannot used", "child level cannot used"]);
-  run("macro-call-in-macro", ["foo", "bar"]);
-  run("macro-defined-in-macro", ["foo", "bar"]);
+  run("macro-call-in-macro", ["foo", "bar", "baz"]);
+  run("macro-defined-in-macro", ["foo", "bar", "baz"]);
   run("wrong-scoped", new Error('BAR is not defined'));
   run("redefine-submacro-in-call-scope", [["foo", "bar", "quux"], ["baz", "bat", "quux"]]);
   run("define-after-using-scoped", ["inner", "inner"]);
