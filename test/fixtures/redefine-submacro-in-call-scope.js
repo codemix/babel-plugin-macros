@@ -14,8 +14,16 @@ function f2() {
   });
   DEFINE_MACRO(BAT, () => "quux");
 }
+function f3() {
+  return QWE(()=>ASD());
+  function QWE(fn) {
+    return ["qwe", ASD(), fn()];
+    DEFINE_MACRO(ASD, () => "asd");
+  }
+  DEFINE_MACRO(ASD, () => "quux");
+}
 
 
 export default function demo() {
-  return [f1(), f2()];
+  return [f1(), f2(), f3()];
 }

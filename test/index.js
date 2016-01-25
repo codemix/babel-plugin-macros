@@ -80,7 +80,7 @@ describe('Babel Macros', function () {
   run("macro-call-in-macro", ["foo", "bar", "baz"]);
   run("macro-defined-in-macro", ["foo", "bar", "baz"]);
   run("wrong-scoped", new Error('BAR is not defined'));
-  run("redefine-submacro-in-call-scope", [["foo", "bar", "quux"], ["baz", "bat", "quux"]]);
+  run("redefine-submacro-in-call-scope", [["foo", "bar", "quux"], ["baz", "bat", "quux"], ["qwe", "asd", "quux"]]);
   run("define-after-using-scoped", ["inner", "inner"]);
   run("infinite-recursion-call", new Error('unknown: Maximum call stack size exceeded'));
   run("self-recursion-call", new Error('unknown: Maximum call stack size exceeded'));
