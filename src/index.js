@@ -207,7 +207,7 @@ export default function build (babel: Object): Object {
     return input.toLowerCase().replace(/_(.)/g, (match, char) => char.toUpperCase());
   }
 
-  function getMacro (node: Object, scope: Object, state: Object): boolean {
+  function getMacro (node: Object, scope: Object, state: Object): Macro | Function | void {
     if (node.type === 'CallExpression') {
       return getMacro(node.callee, scope, state);
     }

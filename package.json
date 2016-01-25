@@ -1,11 +1,11 @@
 {
   "name": "babel-plugin-macros",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Macros for JavaScript via a babel plugin.",
   "main": "lib/index.js",
   "scripts": {
     "build": "babel -d ./lib ./src",
-    "prepublish": "npm run build",
+    "prepublish": "npm run test",
     "pretest": "npm run build && npm run lint",
     "test": "mocha",
     "watch": "mocha --watch",
@@ -32,6 +32,7 @@
     "babel-core": "^6.4.5",
     "babel-eslint": "^4.1.6",
     "babel-plugin-transform-flow-strip-types": "^6.4.0",
+    "babel-plugin-typecheck": "^3.6.1",
     "babel-preset-es2015": "^6.3.13",
     "babel-register": "^6.4.3",
     "eslint": "^1.10.3",
