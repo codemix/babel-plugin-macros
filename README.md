@@ -105,6 +105,7 @@ Then, in your babel configuration (usually in your `.babelrc` file), add `"macro
 fix combining more than 2 macros
 - **1.0.5** optimization. Replacement `traverse` to `get` to find the desired node
 - **1.0.6** honest exception for infinite recursion in macros
+- **1.0.7** add checking types in runtime
 
 # License
 
