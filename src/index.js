@@ -31,13 +31,16 @@ export default function build (babel: Object): Object {
   builtin.DEFINE_MACRO = function defineMacro (path, scope, state) {
     const {node} = path;
     const id = node.arguments[0];
-    if (!(id && t.isIdentifier(id))) {
-      // @todo add test
-      throw new Error(`First argument to DEFINE_MACRO must be an identifier.`);
-    }
-    const name = id.name;
+    const name = id && id.name;
     const macroBody = node.arguments[1];
     const subScope = path.get('arguments')[1].scope;
+    const location = node.loc ? `, at Line: ${node.loc.start.line} Column: ${node.loc.start.column}`: '';
+    if (!(id && t.isIdentifier(id))) {
+      throw new Error('First argument to DEFINE_MACRO must be an identifier' + location);
+    }
+    if (!t.isFunction(macroBody)) {
+      throw new Error('Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression' + location);
+    }
 
     scope[$registeredMacros] = scope[$registeredMacros] || {};
     scope[$registeredMacros][name] = new Macro({name: name, macroBody, scope: subScope, state});
@@ -63,9 +66,6 @@ export default function build (babel: Object): Object {
           }
         }
       }, scope);
-    } else {
-      // @todo add test
-      throw new Error('Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression.');
     }
     return function (path, scope, state) {
       const cloned = _.cloneDeep(node);
@@ -240,7 +240,6 @@ export default function build (babel: Object): Object {
           }
         }
         if (t.isMemberExpression(node.callee)) {
-          // TODO temp locked for refactoring. need another idea for chaining more than 2 macros
           if (
             !node.callee.computed &&
             getMacro(node.callee.object, path.scope, state) &&
