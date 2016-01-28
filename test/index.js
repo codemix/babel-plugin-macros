@@ -88,7 +88,9 @@ describe('Babel Macros', function () {
   run("no-conflict-define-scope-with-call-scope", ["foo", "bar"]);
   // @todo fix in https://github.com/codemix/babel-plugin-macros/issues/8
   //run("execution-order-in-expression", [[1, 2], [1, 2], [1, 2]]);
-  run("wrong-name", new Error('unknown: First argument to DEFINE_MACRO must be an identifier, at Line: 1 Column: 0'));
-  run("wrong-function", new Error('unknown: Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression, at Line: 4 Column: 0'));
+  run("wrong-name", new Error("unknown: First argument to DEFINE_MACRO must be an identifier, at Line: 1 Column: 0"));
+  run("wrong-function", new Error("unknown: Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression, at Line: 4 Column: 0"));
+  run("this-in-macro", new Error("unknown: Can not use `this` in macro, at Line: 1 Column: 0"));
+  run("arguments-in-macro", new Error("unknown: Can not use `arguments` in macro, at Line: 1 Column: 0"));
 });
 

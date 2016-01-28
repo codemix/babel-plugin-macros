@@ -36,15 +36,32 @@ export default function build (babel: Object): Object {
     const subScope = path.get('arguments')[1].scope;
     const location = node.loc ? `, at Line: ${node.loc.start.line} Column: ${node.loc.start.column}`: '';
     if (!(id && t.isIdentifier(id))) {
-      throw new Error('First argument to DEFINE_MACRO must be an identifier' + location);
+      throw new Error("First argument to DEFINE_MACRO must be an identifier" + location);
     }
     if (!t.isFunction(macroBody)) {
-      throw new Error('Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression' + location);
+      throw new Error("Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression" + location);
     }
 
     scope[$registeredMacros] = scope[$registeredMacros] || {};
     scope[$registeredMacros][name] = new Macro({name: name, macroBody, scope: subScope, state});
-    traverse(macroBody, visitors, subScope, state);
+    traverse(
+      macroBody,
+      traverse.visitors.merge([
+        visitors,
+        {
+          ThisExpression() {
+            throw new Error("Can not use `this` in macro" + location);
+          },
+          Identifier({node}) {
+            if("arguments" === node.name) {
+              throw new Error("Can not use `arguments` in macro" + location);
+            }
+          }
+        }
+      ]),
+      subScope,
+      state
+    );
     path.remove();
   };
 
