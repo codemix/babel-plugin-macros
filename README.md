@@ -107,6 +107,7 @@ fix combining more than 2 macros
 - **1.0.6** honest exception for infinite recursion in macros
 - **1.0.7** add checking types in runtime
 - **1.0.8** block using `this` and `arguments` in macros
+- **1.0.8** fix multiple `return` & `return` without value
 
 # License
 

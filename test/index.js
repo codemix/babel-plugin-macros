@@ -92,5 +92,8 @@ describe('Babel Macros', function () {
   run("wrong-function", new Error("unknown: Second argument to DEFINE_MACRO must be a FunctionExpression or ArrowFunctionExpression, at Line: 4 Column: 0"));
   run("this-in-macro", new Error("unknown: Can not use `this` in macro, at Line: 1 Column: 0"));
   run("arguments-in-macro", new Error("unknown: Can not use `arguments` in macro, at Line: 1 Column: 0"));
+  run("no-return", "undefined");
+  run("return-with-no-value", "undefined");
+  run("multiple-return", "foo");
 });
 
