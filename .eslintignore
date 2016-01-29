@@ -1,2 +1,2 @@
 **/*.js
-!src/index.js
+!src/*.js

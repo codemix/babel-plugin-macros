@@ -49,7 +49,7 @@
     "no-sequences": 2,
     "no-shadow": 0,// TODO - MAYBE change to 2 after refactoring
     "no-undef": 2,
-    "no-unused-vars": 0,// TODO - change to 2 after refactoring
+    "no-unused-vars": 2,
     "no-with": 2,
     "quotes": [
       0,
@@ -59,7 +59,7 @@
       0,
       "never"
     ],
-    "strict": 0,// TODO - change to 2 after refactoring
+    "strict": 2,
     "valid-typeof": 2,
     "wrap-iife": [
       2,

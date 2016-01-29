@@ -1,4 +1,4 @@
-import {cloneDeep} from './utils';
+import {cloneDeep, getParentBlock, camelCase} from './utils';
 
 const $registeredMacros = Symbol('registeredMacros');
 const $macroState = Symbol('macroState');
@@ -8,6 +8,7 @@ const $processedByMacro = Symbol('processedByMacro');
  * # Babel Macros
  */
 export default function build (babel: Object): Object {
+  "use strict";
   const {types: t, traverse} = babel;
 
   /**
@@ -85,7 +86,7 @@ export default function build (babel: Object): Object {
         }
       }, scope);
     }
-    return function (path, scope, state) {
+    return function (path, scope) {
       const cloned = cloneDeep(node);
       const uid = scope.generateUidIdentifier(camelCase(name));
       const labelUid = scope.generateUidIdentifier('_' + name.toUpperCase());
@@ -198,25 +199,6 @@ export default function build (babel: Object): Object {
     } else {
       macro.run(path, scope, state)
     }
-  }
-
-
-  function getParentBlock (path) {
-    while (path.parentPath.type !== 'Program' && path.parentPath && !path.parentPath.isStatementOrBlock()) {
-      path = path.parentPath;
-    }
-    return path;
-  }
-
-  function getParentScope (path) {
-    while (path.parentPath.type !== 'Program' && path.parentPath && !path.parentPath.isStatementOrBlock()) {
-      path = path.parentPath;
-    }
-    return path.scope;
-  }
-
-  function camelCase (input) {
-    return input.toLowerCase().replace(/_(.)/g, (match, char) => char.toUpperCase());
   }
 
   function getMacro (node: Object, scope: Object, state: Object): Macro | Function | void {

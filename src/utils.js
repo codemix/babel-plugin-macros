@@ -1,4 +1,5 @@
 export function cloneDeep(node /*: Object*/) /*: Object*/ {
+  "use strict";
   var newNode = Object.create(Object.getPrototypeOf(node)),
     keys = Object.keys(node)
       .concat(Object.getOwnPropertySymbols(node)),
@@ -6,7 +7,7 @@ export function cloneDeep(node /*: Object*/) /*: Object*/ {
     key,
     i
     ;
-  for(i = 0; i < length; i++) {
+  for (i = 0; i < length; i++) {
     key = keys[i];
     if (key[0] === "_") {
       continue;
@@ -22,4 +23,26 @@ export function cloneDeep(node /*: Object*/) /*: Object*/ {
     newNode[key] = val;
   }
   return newNode;
+};
+
+
+export function getParentBlock(path) {
+  "use strict";
+  while (path.parentPath.type !== 'Program' && path.parentPath && !path.parentPath.isStatementOrBlock()) {
+    path = path.parentPath;
+  }
+  return path;
+};
+
+export function getParentScope(path) {
+  "use strict";
+  while (path.parentPath.type !== 'Program' && path.parentPath && !path.parentPath.isStatementOrBlock()) {
+    path = path.parentPath;
+  }
+  return path.scope;
+};
+
+export function camelCase(input) {
+  "use strict";
+  return input.toLowerCase().replace(/_(.)/g, (match, char) => char.toUpperCase());
 };
