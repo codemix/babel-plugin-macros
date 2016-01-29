@@ -259,7 +259,7 @@ export default function build (babel: Object): Object {
           ) {
             const head = node.callee.object;
             const tailId = node.callee.property;
-            node.arguments.unshift(head);//TODO - so slow. maybe is exponent slow ?
+            node.arguments.unshift(head);
             const macro = getMacro(tailId, path.scope, state);
             if (macro) {
               runMacro(path, macro, path.scope, state);
