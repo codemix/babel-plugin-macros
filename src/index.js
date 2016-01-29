@@ -1,7 +1,8 @@
-import _ from 'lodash';
+import {cloneDeep} from './utils';
 
 const $registeredMacros = Symbol('registeredMacros');
 const $macroState = Symbol('macroState');
+const $processedByMacro = Symbol('processedByMacro');
 
 /**
  * # Babel Macros
@@ -85,7 +86,10 @@ export default function build (babel: Object): Object {
       }, scope);
     }
     return function (path, scope, state) {
-      const cloned = _.cloneDeep(node);
+      const cloned = cloneDeep(node);
+      const uid = scope.generateUidIdentifier(camelCase(name));
+      const labelUid = scope.generateUidIdentifier('_' + name.toUpperCase());
+
       const [params, seen] = cloned.params.reduce(([params, seen], id, index) => {
         params[id.name] = {
           id: id,
@@ -96,11 +100,17 @@ export default function build (babel: Object): Object {
         return [params, seen];
       }, [{}, {}]);
 
-      const blockStack = [];
       const loopStack = [];
-      const returnStatements = [];
-      let hasEarlyReturn = false;
+      let hasMultipleReturn = false;
 
+      traverse(cloned, {
+        ReturnStatement(path, state) {
+          if(++state.count > 1) {
+            hasMultipleReturn = true;
+            path.stop();
+          }
+        }
+      }, scope, {count:0});
       traverse(cloned, {
         enter (subPath) {
           const {node: child, parent} = subPath;
@@ -139,10 +149,11 @@ export default function build (babel: Object): Object {
             }
           }
           else if (subPath.isReturnStatement()) {
-            if (blockStack.length > 0) {
-              hasEarlyReturn = true;
+            const isLast = child === cloned.body.body[cloned.body.body.length - 1];
+            subPath.replaceWith(t.expressionStatement(t.assignmentExpression('=', uid, child.argument || t.identifier('undefined'))));
+            if (hasMultipleReturn && !isLast) {
+              subPath.insertAfter(t.breakStatement(labelUid));
             }
-            returnStatements.push([subPath, child]);
           }
           else if (subPath.isLoop()) {
             loopStack.push(subPath);
@@ -150,40 +161,24 @@ export default function build (babel: Object): Object {
           else if (subPath.isFunction()) {
             subPath.skip();
           }
-          else if (subPath.isScope()) {
-            blockStack.push(subPath);
-          }
         },
         exit (path) {
           if (path.isLoop()) {
             loopStack.pop();
-          }
-          else if (path.isScope()) {
-            blockStack.pop();
           }
         }
       }, scope);
 
 
       if (t.isStatement(cloned.body)) {
-        const uid = scope.generateUidIdentifier(camelCase(name));
-        const labelUid = scope.generateUidIdentifier('_' + name.toUpperCase());
         const parentBlock = getParentBlock(path);
         parentBlock.insertBefore([
           t.variableDeclaration('let', [
             t.variableDeclarator(uid)
           ])
         ]);
-        returnStatements.forEach(([path, child]) => {
-          const isLast = child === cloned.body.body[cloned.body.body.length - 1];
-          path.replaceWith(t.expressionStatement(t.assignmentExpression('=', uid, child.argument)));
 
-          if (hasEarlyReturn && !isLast) {
-            path.insertAfter(t.breakStatement(labelUid));
-          }
-        });
-
-        if (hasEarlyReturn) {
+        if (hasMultipleReturn) {
           parentBlock.insertBefore(t.labeledStatement(labelUid, cloned.body));
         }
         else {
@@ -252,7 +247,7 @@ export default function build (babel: Object): Object {
       enter (path, state) {
         const node = path.node;
         if(state[$macroState].macrosDefined) {
-          if (node._processedByMacro) {
+          if (node[$processedByMacro]) {
             return;
           }
         }
@@ -279,7 +274,7 @@ export default function build (babel: Object): Object {
         }
 
         if(state[$macroState].macrosDefined) {
-          node._processedByMacro = true;
+          node[$processedByMacro] = true;
         }
       }
     },
