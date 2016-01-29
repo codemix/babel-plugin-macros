@@ -109,6 +109,7 @@ fix combining more than 2 macros
 - **1.0.8** block using `this` and `arguments` in macros
 - **1.0.9** fix multiple `return` & `return` without value
 - **1.0.10** optimize performance of compile. x10 at tests 
+- **1.0.11** depedency for lodash no more needed 
 
 # License
 
