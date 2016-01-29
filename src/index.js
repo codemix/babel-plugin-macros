@@ -1,7 +1,8 @@
-import _ from 'lodash';
+import {cloneDeep} from './utils';
 
 const $registeredMacros = Symbol('registeredMacros');
 const $macroState = Symbol('macroState');
+const $processedByMacro = Symbol('processedByMacro');
 
 /**
  * # Babel Macros
@@ -85,7 +86,7 @@ export default function build (babel: Object): Object {
       }, scope);
     }
     return function (path, scope, state) {
-      const cloned = _.cloneDeep(node);
+      const cloned = cloneDeep(node);
       const uid = scope.generateUidIdentifier(camelCase(name));
       const labelUid = scope.generateUidIdentifier('_' + name.toUpperCase());
 
@@ -246,7 +247,7 @@ export default function build (babel: Object): Object {
       enter (path, state) {
         const node = path.node;
         if(state[$macroState].macrosDefined) {
-          if (node._processedByMacro) {
+          if (node[$processedByMacro]) {
             return;
           }
         }
@@ -273,7 +274,7 @@ export default function build (babel: Object): Object {
         }
 
         if(state[$macroState].macrosDefined) {
-          node._processedByMacro = true;
+          node[$processedByMacro] = true;
         }
       }
     },
