@@ -12,7 +12,7 @@ function runTest (basename: string, expectedResult: mixed, args: Array = []): vo
   try {
     const source = load(basename);
     const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
-     //console.log(transformed.code);
+    //console.log(transformed.code);
     const context = {
       exports: {}
     };
@@ -95,5 +95,11 @@ describe('Babel Macros', function () {
   run("no-return", "undefined");
   run("return-with-no-value", "undefined");
   run("multiple-return", "foo");
+  run("function-declaration-in-macro", new Error("unknown: FunctionDeclaration in macros are not supported temporarily"));
+  run("function-in-macro", [
+    //["foo-arg", "foo-var", "inner-foo", "inner-foo-var"],//@todo unlock it
+    ["bar-arg", "bar-var", "inner-bar", "inner-bar-var"],
+    ["baz-arg", "baz-var", "inner-baz", "inner-baz-var"]
+  ]);
 });
 

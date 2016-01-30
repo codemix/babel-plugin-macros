@@ -87,7 +87,13 @@ export default class Macro {
             loopStack.push(subPath);
           }
           else if (subPath.isFunction()) {
-            subPath.skip();
+            if(subPath.isFunctionDeclaration()) {
+              // @todo need correct rename. now renames only usages, but not function
+              // @todo add location for message
+              throw new Error('FunctionDeclaration in macros are not supported temporarily');
+            } else {
+              subPath.skip();
+            }
           }
         },
         exit (path) {
