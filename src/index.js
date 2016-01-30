@@ -1,3 +1,5 @@
+import * as t from 'babel-types';
+import traverse from 'babel-traverse';
 import {cloneDeep, getParentBlock, camelCase} from './utils';
 
 const $registeredMacros = Symbol('registeredMacros');
@@ -7,9 +9,8 @@ const $processedByMacro = Symbol('processedByMacro');
 /**
  * # Babel Macros
  */
-export default function build (babel: Object): Object {
+export default function build (): Object {
   "use strict";
-  const {types: t, traverse} = babel;
 
   /**
    * A list of builtin macros.
