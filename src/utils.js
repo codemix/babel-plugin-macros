@@ -1,11 +1,15 @@
 import traverse from 'babel-traverse';
 import * as t from 'babel-types';
+import allSymbols from './symbols';
 
 export function cloneDeep(node /*: Object*/) /*: Object*/ {
   "use strict";
   var newNode = Object.create(Object.getPrototypeOf(node)),
     keys = Object.keys(node)
-      .concat(Object.getOwnPropertySymbols(node)),
+      .concat(
+        Object.getOwnPropertySymbols(node)
+          .filter(key=>allSymbols.indexOf(key) !== -1)
+      ),
     length = keys.length,
     key,
     i

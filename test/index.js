@@ -101,5 +101,6 @@ describe('Babel Macros', function () {
     ["bar-arg", "bar-var", "inner-bar", "inner-bar-var"],
     ["baz-arg", "baz-var", "inner-baz", "inner-baz-var"]
   ]);
+  run("call-macro-with-blocks-in-another-macro", ["foo", "bar"]);
 });
 
