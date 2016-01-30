@@ -37,15 +37,11 @@ export default class Macro {
         return [params, seen];
       }, [{}, {}]);
 
-      const loopStack = [];
       let hasMultipleReturn = checkMultipleReturn(cloned, scope);
       traverse(cloned, {
-        enter (subPath) {
+        Identifier(subPath) {
           const {node: child, parent} = subPath;
-          if (
-            child.type === 'Identifier' &&
-            (parent.type !== "MemberExpression" || parent.object === child || (parent.computed && parent.property === child))
-          ) {
+          if (parent.type !== "MemberExpression" || parent.object === child || (parent.computed && parent.property === child)) {
             if (params[child.name]) {
               const param = params[child.name];
               if (
@@ -76,30 +72,21 @@ export default class Macro {
               subPath.replaceWith(seen[child.name])
             }
           }
-          else if (subPath.isReturnStatement()) {
-            const isLast = child === cloned.body.body[cloned.body.body.length - 1];
-            subPath.replaceWith(t.expressionStatement(t.assignmentExpression('=', uid, child.argument || t.identifier('undefined'))));
-            if (hasMultipleReturn && !isLast) {
-              subPath.insertAfter(t.breakStatement(labelUid));
-            }
-          }
-          else if (subPath.isLoop()) {
-            loopStack.push(subPath);
-          }
-          else if (subPath.isFunction()) {
-            if(subPath.isFunctionDeclaration()) {
-              // @todo need correct rename. now renames only usages, but not function
-              // @todo add location for message
-              throw new Error('FunctionDeclaration in macros are not supported temporarily');
-            } else {
-              subPath.skip();
-            }
+        },
+        ReturnStatement(subPath) {
+          const {node: child} = subPath;
+          const isLast = child === cloned.body.body[cloned.body.body.length - 1];
+          subPath.replaceWith(t.expressionStatement(t.assignmentExpression('=', uid, child.argument || t.identifier('undefined'))));
+          if (hasMultipleReturn && !isLast) {
+            subPath.insertAfter(t.breakStatement(labelUid));
           }
         },
-        exit (path) {
-          if (path.isLoop()) {
-            loopStack.pop();
-          }
+        FunctionDeclaration() {
+          // @todo need correct rename. now renames only usages, but not function
+          throw new Error('FunctionDeclaration in macros are not supported temporarily');
+        },
+        Function(subPath) {
+          subPath.skip();
         }
       }, scope);
 
