@@ -1,57 +1,61 @@
-import {$macroState, $processedByMacro} from './symbols';
+import {$processedByMacro} from './symbols';
 import * as t from 'babel-types';
+import traverse from 'babel-traverse';
 import Macro from './Macro';
 
-export const visitor = {
-  CallExpression: {
-    enter (path, state) {
-      "use strict";
-      const {node} = path;
-      if (state[$macroState].macrosDefined) {
-        if (node[$processedByMacro]) {
-          return;
-        }
-      }
-      if (t.isMemberExpression(node.callee)) {
-        if (
-          !node.callee.computed &&
-          Macro.getMacro(node.callee.object, path.scope, state) &&
-          Macro.getMacro(node.callee.property, path.scope, state)
-        ) {
-          const head = node.callee.object;
-          const tailId = node.callee.property;
-          node.arguments.unshift(head);
-          const macro = Macro.getMacro(tailId, path.scope, state);
-          if (macro) {
-            Macro.runMacro(path, macro, path.scope, state);
-          }
-        }
-      }
-      else {
-        const macro = Macro.getMacro(node.callee, path.scope, state);
-        if (macro) {
-          Macro.runMacro(path, macro, path.scope, state);
-        }
-      }
+export const collectMacros = {
+  CallExpression(path) {
+    "use strict";
+    _processMacro(path, true);
+  }
+};
 
-      if (state[$macroState].macrosDefined) {
-        node[$processedByMacro] = true;
-      }
+export const processMacros = {
+  CallExpression(path) {
+    "use strict";
+    const {node} = path;
+    if (node[$processedByMacro]) {
+      return;
     }
-  },
-  Program: {
-    enter (path, state) {
-      "use strict";
-      state[$macroState] = {
-        macrosDefined: false
-      };
-    },
-    exit (path, state) {
-      "use strict";
-      if (!state[$macroState].macrosDefined) {
-        state[$macroState].macrosDefined = true;
-        path.traverse(visitor, state);
+    _processMacro(path, false);
+    node[$processedByMacro] = true;
+  }
+};
+
+export const mainVisitor = traverse.visitors.merge([
+  collectMacros,
+  {
+    Program: {
+      exit (path) {
+        "use strict";
+        path.traverse(processMacros);
       }
     }
   }
-};
+]);
+
+function _processMacro(path, isBuiltinMacro) {
+  "use strict";
+  const {node} = path;
+  if (t.isMemberExpression(node.callee)) {
+    if (
+      !node.callee.computed &&
+      Macro.getMacro(node.callee.object, path.scope, isBuiltinMacro) &&
+      Macro.getMacro(node.callee.property, path.scope, isBuiltinMacro)
+    ) {
+      const head = node.callee.object;
+      const tailId = node.callee.property;
+      node.arguments.unshift(head);
+      const macro = Macro.getMacro(tailId, path.scope, isBuiltinMacro);
+      if (macro) {
+        Macro.runMacro(path, macro, path.scope);
+      }
+    }
+  }
+  else {
+    const macro = Macro.getMacro(node.callee, path.scope, isBuiltinMacro);
+    if (macro) {
+      Macro.runMacro(path, macro, path.scope);
+    }
+  }
+}

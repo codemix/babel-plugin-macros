@@ -2,9 +2,9 @@ import * as t from 'babel-types';
 import traverse from 'babel-traverse';
 import {$registeredMacros} from './symbols';
 import Macro from './Macro';
-import {visitor} from './visitors';
+import {collectMacros} from './visitors';
 
-export const DEFINE_MACRO = function defineMacro(path, scope, state) {
+export const DEFINE_MACRO = function defineMacro(path, scope) {
   "use strict";
   const {node} = path;
   const id = node.arguments[0];
@@ -20,11 +20,11 @@ export const DEFINE_MACRO = function defineMacro(path, scope, state) {
   }
 
   scope[$registeredMacros] = scope[$registeredMacros] || {};
-  scope[$registeredMacros][name] = new Macro({name: name, macroBody, scope: subScope, state});
+  scope[$registeredMacros][name] = new Macro({name: name, macroBody, scope: subScope});
   traverse(
     macroBody,
     traverse.visitors.merge([
-      visitor,
+      collectMacros,
       {
         ThisExpression() {
           throw new Error("Can not use `this` in macro" + location);
@@ -36,8 +36,7 @@ export const DEFINE_MACRO = function defineMacro(path, scope, state) {
         }
       }
     ]),
-    subScope,
-    state
+    subScope
   );
   path.remove();
 };

@@ -1,32 +1,30 @@
 import * as t from 'babel-types';
 import traverse from 'babel-traverse';
 import * as builtin from './builtin';
-import {visitor} from './visitors';
+import {processMacros} from './visitors';
 import {cloneDeep, getParentBlock, camelCase} from './utils';
-import {$registeredMacros, $macroState} from './symbols';
+import {$registeredMacros} from './symbols';
 
 export default class Macro {
-  constructor({name, macroBody, scope, state}) {
+  constructor({name, macroBody, scope}) {
     this.name = name;
     this.macroBody = macroBody;
     this.scope = scope;
-    this.state = state;
   }
 
-  run(path, scope, state) {
+  run(path, scope) {
     if (!this.macro) {
-      this.macro = this.compileMacro(this.name, this.macroBody, this.scope, this.state);
+      this.macro = this.compileMacro(this.name, this.macroBody, this.scope);
     }
-    return this.macro(path, scope, state);
+    return this.macro(path, scope);
   }
-
-
-  compileMacro(name:string, node:Object, scope:Object, state:Object):Function {
+  
+  compileMacro(name:string, node:Object, scope:Object):Function {
     const paramNames = node.params.map(param => param.name);
     const paramReferenceCounts = {};
     const references = Object.create(null);
     if (t.isFunction(node)) {
-      traverse(node, visitor, scope, state);
+      traverse(node, processMacros, scope);
       traverse(node, {
         enter (subPath) {
           const {node: child, parent} = subPath;
@@ -147,34 +145,34 @@ export default class Macro {
     };
   }
 
-  static runMacro(path, macro, scope, state) {
+  static runMacro(path, macro, scope) {
     if (typeof macro === 'function') {
-      macro(path, scope, state)
+      macro(path, scope)
     } else {
-      macro.run(path, scope, state)
+      macro.run(path, scope)
     }
   }
 
-  static getMacro(node:Object, scope:Object, state:Object):Macro | Function | void {
+  static getMacro(node:Object, scope:Object, isBuiltinMacro:boolean):Macro | Function | void {
     if (node.type === 'CallExpression') {
-      return Macro.getMacro(node.callee, scope, state);
+      return Macro.getMacro(node.callee, scope, isBuiltinMacro);
     }
     else if (t.isIdentifier(node)) {
-      if (state[$macroState].macrosDefined) {
-        while (scope) {
-          if (scope[$registeredMacros] && scope[$registeredMacros][node.name]) {
-            return scope[$registeredMacros][node.name];
-          }
-          scope = scope.parent;
+      if (isBuiltinMacro) {
+        if (builtin[node.name]) {
+          return builtin[node.name];
         }
+        return;
       }
-      if (builtin[node.name]) {
-        return builtin[node.name];
+      while (scope) {
+        if (scope[$registeredMacros] && scope[$registeredMacros][node.name]) {
+          return scope[$registeredMacros][node.name];
+        }
+        scope = scope.parent;
       }
     }
     else if (t.isMemberExpression(node) && !node.computed && t.isIdentifier(node.property)) {
-      return Macro.getMacro(node.property, scope, state);
+      return Macro.getMacro(node.property, scope, isBuiltinMacro);
     }
   }
-
 };

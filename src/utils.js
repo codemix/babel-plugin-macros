@@ -25,7 +25,6 @@ export function cloneDeep(node /*: Object*/) /*: Object*/ {
   return newNode;
 };
 
-
 export function getParentBlock(path) {
   "use strict";
   while (path.parentPath.type !== 'Program' && path.parentPath && !path.parentPath.isStatementOrBlock()) {
