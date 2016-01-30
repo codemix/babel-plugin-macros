@@ -2,7 +2,7 @@ import * as t from 'babel-types';
 import traverse from 'babel-traverse';
 import * as builtin from './builtin';
 import {processMacros} from './visitors';
-import {cloneDeep, getParentBlock, camelCase} from './utils';
+import {cloneDeep, getParentBlock, camelCase, checkMultipleReturn, collectReferences} from './utils';
 import {$registeredMacros} from './symbols';
 
 export default class Macro {
@@ -14,30 +14,14 @@ export default class Macro {
 
   run(path, scope) {
     if (!this.macro) {
-      this.macro = this.compileMacro(this.name, this.macroBody, this.scope);
+      this.macro = Macro.compileMacro(this.name, this.macroBody, this.scope);
     }
     return this.macro(path, scope);
   }
-  
-  compileMacro(name:string, node:Object, scope:Object):Function {
-    const paramNames = node.params.map(param => param.name);
-    const paramReferenceCounts = {};
-    const references = Object.create(null);
-    if (t.isFunction(node)) {
-      traverse(node, processMacros, scope);
-      traverse(node, {
-        enter (subPath) {
-          const {node: child, parent} = subPath;
-          if (subPath.isVariableDeclarator() || subPath.isFunctionDeclaration()) {
-            references[child.id.name] = true;
-          }
-          else if (subPath.isIdentifier() && (!t.isFunction(parent) || (parent.type === "ArrowFunctionExpression" && parent.body === child)) && (!t.isMemberExpression(parent) || parent.object === child) && ~paramNames.indexOf(child.name)) {
-            paramReferenceCounts[child.name] = paramReferenceCounts[child.name] || 0;
-            paramReferenceCounts[child.name]++;
-          }
-        }
-      }, scope);
-    }
+
+  static compileMacro(name:string, node:Object, scope:Object):Function {
+    traverse(node, processMacros, scope);
+    const {references, paramReferenceCounts} = collectReferences(node, scope);
     return function (path, scope) {
       const cloned = cloneDeep(node);
       const uid = scope.generateUidIdentifier(camelCase(name));
@@ -54,16 +38,7 @@ export default class Macro {
       }, [{}, {}]);
 
       const loopStack = [];
-      let hasMultipleReturn = false;
-
-      traverse(cloned, {
-        ReturnStatement(path, state) {
-          if (++state.count > 1) {
-            hasMultipleReturn = true;
-            path.stop();
-          }
-        }
-      }, scope, {count: 0});
+      let hasMultipleReturn = checkMultipleReturn(cloned, scope);
       traverse(cloned, {
         enter (subPath) {
           const {node: child, parent} = subPath;
