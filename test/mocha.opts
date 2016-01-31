@@ -1,4 +1,3 @@
 --reporter=spec
 --require should
 --require ./test-polyfill.js
--t 500
