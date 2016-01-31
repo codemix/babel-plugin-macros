@@ -12,7 +12,7 @@ function runTest (basename: string, expectedResult: mixed, args: Array = []): vo
   try {
     const source = load(basename);
     const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
-    //console.log(transformed.code);
+    console.log(transformed.code);
     const context = {
       exports: {}
     };
