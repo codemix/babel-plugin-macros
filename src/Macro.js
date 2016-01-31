@@ -41,13 +41,13 @@ export default class Macro {
       traverse(cloned, {
         Identifier(subPath) {
           const {node: child, parent} = subPath;
-          if (parent.type !== "MemberExpression" || parent.object === child || (parent.computed && parent.property === child)) {
+          if (parent.type !== "MemberExpression" || parent.object === child || parent.computed && parent.property === child) {
             if (params[child.name]) {
               const param = params[child.name];
               if (
                 param.replacement.type === 'Identifier' ||
                 param.replacement.type === 'Literal' ||
-                (paramReferenceCounts[child.name] === 1 && param.replacement.type === 'MemberExpression')
+                paramReferenceCounts[child.name] === 1 && param.replacement.type === 'MemberExpression'
               ) {
                 subPath.replaceWith(param.replacement);
                 seen[child.name] = param.replacement;

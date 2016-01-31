@@ -9,7 +9,7 @@
     "pretest": "npm run build && npm run lint",
     "test": "mocha",
     "watch": "mocha --watch",
-    "lint": "eslint ./src/index.js"
+    "lint": "eslint **/*.js"
   },
   "repository": {
     "type": "git",

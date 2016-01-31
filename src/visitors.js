@@ -1,6 +1,5 @@
 import {$processedByMacro} from './symbols';
 import * as t from 'babel-types';
-import traverse from 'babel-traverse';
 import Macro from './Macro';
 
 export const collectMacros = {
