@@ -22,17 +22,26 @@ export const processMacros = {
   }
 };
 
-export const mainVisitor = traverse.visitors.merge([
-  collectMacros,
-  {
-    Program: {
-      exit (path) {
-        "use strict";
-        path.traverse(processMacros);
-      }
+/* @todo
+macros are deleted immediately after fin ding
+This prevents third-party plug-ins to make a transformation within their code
+Possible solutions:
+1. Before removing the macro execute other plugins on his body
+perhaps they are all available in the article
+2. remove the macros only when they are all applied
+3. temporary hack. search and process of macros only after all the work of other plug-ins
+
+last variant temporary is used
+*/
+export const mainVisitor = {
+  Program: {
+    exit (path) {
+      "use strict";
+      path.traverse(collectMacros);
+      path.traverse(processMacros);
     }
   }
-]);
+};
 
 function _processMacro(path, isBuiltinMacro) {
   "use strict";
