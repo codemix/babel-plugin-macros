@@ -5,3 +5,6 @@ node_js:
   - "iojs"
   - "iojs-v2.0.0"
   - "iojs-v3.3.1"
+cache:
+  directories:
+    - node_modules
