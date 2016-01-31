@@ -103,5 +103,7 @@ describe('Babel Macros', function () {
   ]);
   run("call-macro-with-blocks-in-another-macro", ["foo", "bar"]);
   run("break-in-loop", [[true, true], [true, true], [true, true], [true, true]]);
+  // @todo fix in https://github.com/codemix/babel-plugin-macros/issues/11
+  //run("parent-scope-of-macro", new Error("unknown: scope of define and call macro conflicted by using variable 'value'"));
 });
 
