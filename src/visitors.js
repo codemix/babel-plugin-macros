@@ -1,13 +1,43 @@
 import {$processedByMacro} from './symbols';
 import * as t from 'babel-types';
+import traverse from 'babel-traverse';
 import Macro from './Macro';
 
-export const collectMacros = {
+export const collectMacros1 = {
   CallExpression(path) {
     "use strict";
     _processMacro(path, true);
   }
 };
+
+export const collectMacros2 = {
+  LabeledStatement: {
+    exit(path){
+      "use strict";
+      if(path.node.label.name === 'macro') {
+        path.remove();
+      }
+    }
+  },
+  VariableDeclarator(path) {
+    "use strict";
+    const parent1 = path.parentPath.parentPath,
+      parent2 = parent1.parentPath
+    ;
+    if(
+      t.isLabeledStatement(parent1) && parent1.node.label.name === 'macro' ||
+      t.isLabeledStatement(parent2) && parent2.node.label.name === 'macro'
+    ) {
+      Macro.register(path.node.id.name, path.get('init'), parent2.scope);
+      path.remove();
+    }
+  }
+};
+
+export const collectMacros = traverse.visitors.merge([
+  collectMacros1,
+  collectMacros2
+]);
 
 export const processMacros = {
   CallExpression(path) {
