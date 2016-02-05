@@ -9,7 +9,7 @@
     "pretest": "npm run build && npm run lint",
     "test": "mocha",
     "watch": "mocha --watch",
-    "lint": "eslint ./src/index.js"
+    "lint": "eslint **/*.js"
   },
   "repository": {
     "type": "git",
@@ -40,5 +40,7 @@
     "should": "^6.0.3"
   },
   "dependencies": {
+    "babel-types": "^6.4.5",
+    "babel-traverse": "^6.4.5"
   }
 }

@@ -1,2 +1,3 @@
-**/*.js
-!src/*.js
+node_modules/**/*.js
+lib/**/*.js
+test/**/*.js
