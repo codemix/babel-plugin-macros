@@ -94,5 +94,5 @@ export function warning(msg) {
 
 export function getLocationMessage(node) {
   "use strict";
-  return node.loc ? `, at Line: ${node.loc.start.line} Column: ${node.loc.start.column}` : '';
+  return node.loc ? `, at Line: ${node.loc.start.line} Column: ${node.loc.start.column + 1}` : '';
 };
