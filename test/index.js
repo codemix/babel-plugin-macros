@@ -106,5 +106,6 @@ describe('Babel Macros', function () {
   // @todo fix in https://github.com/codemix/babel-plugin-macros/issues/11
   //run("parent-scope-of-macro", new Error("unknown: scope of define and call macro conflicted by using variable 'value'"));
   run("new-syntax", ["foo", "bar", "baz", "quux", "foo1", "bar1", "baz1", "quux1"]);
+  run("macro-call-in-class", "foo");
 });
 
