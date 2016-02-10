@@ -29,17 +29,12 @@ Into code like this:
 ```js
 function demo() {
   var _input = [1, 2, 3, 4];
-
-  var _visitor = function _visitor(item) {
-    return item + 1;
-  };
-
   var _map = undefined;
 
   var _length = _input.length;
   var _result = new Array(_length);
   for (var _i2 = 0; _i2 < _length; _i2++) {
-    _result[_i2] = _visitor(_input[_i2], _i2, _input);
+    _result[_i2] = _input[_i2] + 1;
   }
   _map = _result;
 
@@ -83,10 +78,8 @@ Because macros are incredibly useful! Also because they make it easy to write ex
 # Todo List
 
 - [ ] Allow macros in macro definitions (currently causes infinite loop)
-- [ ] Refactor for readability
 - [ ] Allow macros to be imported and exported across files.
 - [ ] Add `DEFINE_TRANSFORM` which is similar to `DEFINE_MACRO` but allows direct AST manipulation, not merely replacement.
-- [ ] Implement function inlining for macro arguments (in the map example above, the `_visitor` function body should be inlined, removing the function entirely).
 
 # Installation
 
@@ -119,6 +112,7 @@ fix combining more than 2 macros
 - **1.0.10** optimize performance of compile. x10 at tests 
 - **1.0.11** depedency for lodash no more needed 
 - **1.0.12** new syntax for define macro, using label 
+- **1.0.13** Implement function inlining for macro arguments 
 
 # License
 

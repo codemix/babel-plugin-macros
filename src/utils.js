@@ -1,36 +1,5 @@
 import traverse from 'babel-traverse';
 import * as t from 'babel-types';
-import allSymbols from './symbols';
-
-export function cloneDeep(node /*: Object*/) /*: Object*/ {
-  "use strict";
-  var newNode = Object.create(Object.getPrototypeOf(node)),
-    keys = Object.keys(node)
-      .concat(
-        Object.getOwnPropertySymbols(node)
-          .filter(key=>allSymbols.indexOf(key) !== -1)
-      ),
-    length = keys.length,
-    key,
-    i
-    ;
-  for (i = 0; i < length; i++) {
-    key = keys[i];
-    if (key[0] === "_") {
-      continue;
-    }
-    var val = node[key];
-    if (val) {
-      if (val.type) {
-        val = cloneDeep(val);
-      } else if (Array.isArray(val)) {
-        val = val.map(cloneDeep);
-      }
-    }
-    newNode[key] = val;
-  }
-  return newNode;
-};
 
 export function getParentBlock(path) {
   "use strict";

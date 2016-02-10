@@ -56,13 +56,13 @@ export const collectMacros = traverse.visitors.merge([
 ]);
 
 export const processMacros = {
-  CallExpression(path) {
+  CallExpression(path, state) {
     "use strict";
     const {node} = path;
     if (node[$processedByMacro]) {
       return;
     }
-    _processMacro(path, false);
+    _processMacro(path, state || false);
     node[$processedByMacro] = true;
   }
 };

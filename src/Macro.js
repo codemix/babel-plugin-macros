@@ -2,22 +2,12 @@ import * as t from 'babel-types';
 import traverse from 'babel-traverse';
 import * as builtin from './builtin';
 import {collectMacros, processMacros} from './visitors';
-import {cloneDeep, getParentBlock, camelCase, checkMultipleReturn, collectReferences} from './utils';
+import {getParentBlock, camelCase, checkMultipleReturn, collectReferences} from './utils';
 import {$registeredMacros} from './symbols';
 
 export default class Macro {
-  constructor({name, macroBody, scope}) {
-    this.name = name;
-    this.macroBody = macroBody;
-    this.scope = scope;
-  }
-
-  static register(name, macroPath, scope, location) {
-    const macroBody = macroPath.node,
-      subScope = macroPath.scope;
+  constructor({name, macroBody, scope, location}) {
     location = location || '';
-    scope[$registeredMacros] = scope[$registeredMacros] || {};
-    scope[$registeredMacros][name] = new Macro({name: name, macroBody, scope: subScope});
     traverse(
       macroBody,
       traverse.visitors.merge([
@@ -33,8 +23,19 @@ export default class Macro {
           }
         }
       ]),
-      subScope
+      scope
     );
+    this.name = name;
+    this.macroBody = macroBody;
+    this.scope = scope;
+  }
+
+  static register(name, macroPath, scope, location) {
+    const macroBody = macroPath.node,
+      subScope = macroPath.scope;
+    location = location || '';
+    scope[$registeredMacros] = scope[$registeredMacros] || {};
+    scope[$registeredMacros][name] = new Macro({name, macroBody, scope: subScope, location});
   }
 
   run(path, scope) {
@@ -48,19 +49,25 @@ export default class Macro {
     traverse(node, processMacros, scope);
     const {references, paramReferenceCounts} = collectReferences(node, scope);
     return function (path, scope) {
-      const cloned = cloneDeep(node);
+      const cloned = t.cloneDeep(node);
       const uid = scope.generateUidIdentifier(camelCase(name));
       const labelUid = scope.generateUidIdentifier('_' + name.toUpperCase());
-
+      var argsMacros = {};
       const [params, seen] = cloned.params.reduce(([params, seen], id, index) => {
-        params[id.name] = {
-          id: id,
-          replacement: path.node.arguments[index] || t.identifier('undefined'),
-          reference: null
-        };
-        seen[id.name] = false;
+        const argument = path.get('arguments.' + index);
+        if (argument && argument.isFunction()) {
+          argsMacros[id.name] = new Macro({name: id.name, macroBody: argument.node, scope: argument.scope});
+        } else {
+          params[id.name] = {
+            id: id,
+            replacement: path.node.arguments[index] || t.identifier('undefined'),
+            reference: null
+          };
+          seen[id.name] = false;
+        }
         return [params, seen];
       }, [{}, {}]);
+      traverse(cloned, processMacros, scope, argsMacros);
 
       let hasMultipleReturn = checkMultipleReturn(cloned, scope);
       traverse(cloned, {
@@ -146,13 +153,18 @@ export default class Macro {
     }
   }
 
-  static getMacro(node:Object, scope:Object, isBuiltinMacro:boolean):Macro | Function | void {
+  static getMacro(node:Object, scope:Object, isBuiltinMacro:boolean | Object):Macro | Function | void {
     if (node.type === 'CallExpression') {
       return Macro.getMacro(node.callee, scope, isBuiltinMacro);
     }
     else if (t.isIdentifier(node)) {
       if (isBuiltinMacro) {
-        if (builtin[node.name]) {
+        if ('object' === typeof isBuiltinMacro) {
+          if (isBuiltinMacro[node.name]) {
+            return isBuiltinMacro[node.name];
+          }
+        }
+        else if (builtin[node.name]) {
           return builtin[node.name];
         }
         return;
