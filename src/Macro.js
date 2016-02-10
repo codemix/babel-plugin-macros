@@ -1,7 +1,7 @@
 import * as t from 'babel-types';
 import traverse from 'babel-traverse';
 import * as builtin from './builtin';
-import {processMacros} from './visitors';
+import {collectMacros, processMacros} from './visitors';
 import {cloneDeep, getParentBlock, camelCase, checkMultipleReturn, collectReferences} from './utils';
 import {$registeredMacros} from './symbols';
 
@@ -10,6 +10,31 @@ export default class Macro {
     this.name = name;
     this.macroBody = macroBody;
     this.scope = scope;
+  }
+
+  static register(name, macroPath, scope, location) {
+    const macroBody = macroPath.node,
+      subScope = macroPath.scope;
+    location = location || '';
+    scope[$registeredMacros] = scope[$registeredMacros] || {};
+    scope[$registeredMacros][name] = new Macro({name: name, macroBody, scope: subScope});
+    traverse(
+      macroBody,
+      traverse.visitors.merge([
+        collectMacros,
+        {
+          ThisExpression() {
+            throw new Error("Can not use `this` in macro" + location);
+          },
+          Identifier({node}) {
+            if ("arguments" === node.name) {
+              throw new Error("Can not use `arguments` in macro" + location);
+            }
+          }
+        }
+      ]),
+      subScope
+    );
   }
 
   run(path, scope) {

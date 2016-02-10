@@ -86,3 +86,13 @@ export function collectReferences(node, scope) {
   }, scope);
   return {paramReferenceCounts: paramReferenceCounts, references: references};
 };
+
+export function warning(msg) {
+  "use strict";
+  console.error(msg);
+};
+
+export function getLocationMessage(node) {
+  "use strict";
+  return node.loc ? `, at Line: ${node.loc.start.line} Column: ${node.loc.start.column + 1}` : '';
+};

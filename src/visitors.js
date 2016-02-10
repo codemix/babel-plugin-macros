@@ -1,13 +1,59 @@
 import {$processedByMacro} from './symbols';
 import * as t from 'babel-types';
+import traverse from 'babel-traverse';
 import Macro from './Macro';
+import {getLocationMessage, warning} from './utils';
 
-export const collectMacros = {
+export const collectMacros1 = {
   CallExpression(path) {
     "use strict";
     _processMacro(path, true);
   }
 };
+
+export const collectMacros2 = {
+  LabeledStatement: {
+    exit(path){
+      "use strict";
+      if (path.node.label.name === 'macro') {
+        path.remove();
+      }
+    }
+  },
+  VariableDeclarator(path) {
+    "use strict";
+    const parent1 = path.parentPath.parentPath,
+      parent2 = parent1.parentPath
+      ;
+    if (
+      t.isLabeledStatement(parent1) && parent1.node.label.name === 'macro' ||
+      t.isLabeledStatement(parent2) && parent2.node.label.name === 'macro'
+    ) {
+      Macro.register(path.node.id.name, path.get('init'), parent2.scope);
+      path.remove();
+    }
+  },
+  FunctionDeclaration(path) {
+    "use strict";
+    const node = path.node,
+      parent1 = path.parentPath,
+      parent2 = parent1.parentPath
+      ;
+    if (
+      t.isLabeledStatement(parent1) && parent1.node.label.name === 'macro' ||
+      t.isLabeledStatement(parent2) && parent2.node.label.name === 'macro'
+    ) {
+      warning(`FunctionDeclaration converted to macro. Incompatible with native JS behaviour${getLocationMessage(node)}`);
+      Macro.register(node.id.name, path, parent2.scope);
+      path.remove();
+    }
+  }
+};
+
+export const collectMacros = traverse.visitors.merge([
+  collectMacros1,
+  collectMacros2
+]);
 
 export const processMacros = {
   CallExpression(path) {
@@ -22,19 +68,19 @@ export const processMacros = {
 };
 
 /* @todo
-macros are deleted immediately after fin ding
-This prevents third-party plug-ins to make a transformation within their code
-Possible solutions:
-1. Before removing the macro execute other plugins on his body
-perhaps they are all available in the article
-2. remove the macros only when they are all applied
-3. temporary hack. search and process of macros only after all the work of other plug-ins
+ macros are deleted immediately after fin ding
+ This prevents third-party plug-ins to make a transformation within their code
+ Possible solutions:
+ 1. Before removing the macro execute other plugins on his body
+ perhaps they are all available in the article
+ 2. remove the macros only when they are all applied
+ 3. temporary hack. search and process of macros only after all the work of other plug-ins
 
-last variant temporary is used
-*/
+ last variant temporary is used
+ */
 export const mainVisitor = {
   Program: {
-    exit (path) {
+    enter (path) {
       "use strict";
       path.traverse(collectMacros);
       path.traverse(processMacros);

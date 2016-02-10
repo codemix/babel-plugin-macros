@@ -47,6 +47,14 @@ function demo() {
 }
 ```
 
+Also you may use more native syntax to define macro
+```js
+macro: function MACRO() {
+  console.log('MACRO called');
+}
+MACRO();
+```
+
 Macro calls can also be chained, so if you declare a new macro called, e.g. `FILTER`:
 
 ```js
@@ -110,6 +118,7 @@ fix combining more than 2 macros
 - **1.0.9** fix multiple `return` & `return` without value
 - **1.0.10** optimize performance of compile. x10 at tests 
 - **1.0.11** depedency for lodash no more needed 
+- **1.0.12** new syntax for define macro, using label 
 
 # License
 
