@@ -7,11 +7,16 @@ function load (basename: string): string {
   const filename = `${__dirname}/fixtures/${basename}.js`;
   return fs.readFileSync(filename, 'utf8');
 }
+function save (basename: string, content:string) {
+  const filename = `${__dirname}/fixtures/${basename}.js`;
+  fs.writeFileSync(filename, content);
+}
 
 function runTest (basename: string, expectedResult: mixed, args: Array = []): void {
   try {
     const source = load(basename);
     const transformed = transform(source, {"presets": ["es2015"], plugins: [Plugin]});
+    checkCode(basename, transformed.code);
     //console.log(transformed.code);
     const context = {
       exports: {}
@@ -30,6 +35,18 @@ function runTest (basename: string, expectedResult: mixed, args: Array = []): vo
     else {
       throw e;
     }
+  }
+}
+
+function checkCode(basename: string) {
+  const filename = `${__dirname}/fixtures/${basename}.js`;
+  const source = load(basename);
+  const transformedNaked = transform(source, {"presets": [], plugins: [Plugin]}).code;
+  if(fs.existsSync(filename.replace('.js', '.expected.js'))) {
+    const expected = load(basename + '.expected');
+    transformedNaked.should.eql(expected);
+  } else {
+    save(basename + '.expected', transformedNaked);
   }
 }
 
