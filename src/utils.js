@@ -65,3 +65,29 @@ export function getLocationMessage(node) {
   "use strict";
   return node.loc ? `, at Line: ${node.loc.start.line} Column: ${node.loc.start.column + 1}` : '';
 };
+
+export function isSimple(node) {
+  'use strict';
+  console.log(node.type, require('babel-generator').default(node).code);
+  //console.log(Object.keys(t));
+  console.log(node);
+  if (t.isMemberExpression(node)) {
+    return false;
+  }
+  if (t.isCallExpression(node)) {
+    return false;
+  }
+  if (t.isLiteral(node)) {
+    return true;
+  }
+  if (t.isIdentifier(node) && node.name === 'undefined') {
+    return true;
+  }
+  if (t.isFunction(node)) {
+    return true;
+  }
+  if (t.isArrayExpression(node)) {
+    return node.elements.every(subNode=>isSimple(subNode));
+  }
+  return false;
+};

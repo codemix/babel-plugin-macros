@@ -1,3 +1,6 @@
+test/index.js
+test/unit/**/*.js
+
 --reporter=spec
 --require should
 --require babel-register
