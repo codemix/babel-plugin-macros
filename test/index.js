@@ -108,5 +108,6 @@ describe('Babel Macros', function () {
   run("new-syntax", ["foo", "bar", "baz", "quux", "foo1", "bar1", "baz1", "quux1"]);
   run("macro-call-in-class", "foo");
   run("inline-function-arguments", [0, 0, 0, 0]);
+  run("function-args", ['foo1', 'bar1', 'baz1', 'foo2', 'bar2', 'baz2', 'foo3', 'bar3', 'baz3']);
 });
 
