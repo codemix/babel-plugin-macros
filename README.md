@@ -113,6 +113,7 @@ fix combining more than 2 macros
 - **1.0.11** depedency for lodash no more needed 
 - **1.0.12** new syntax for define macro, using label 
 - **1.0.13** Implement function inlining for macro arguments 
+- **1.0.14** fix for different inlined function types in macro-argument 
 
 # License
 

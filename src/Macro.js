@@ -67,7 +67,7 @@ export default class Macro {
         }
         return [params, seen];
       }, [{}, {}]);
-      traverse(cloned, processMacros, scope, argsMacros);
+      traverse(cloned, processMacros, scope, argsMacros, path.parentPath);
 
       let hasMultipleReturn = checkMultipleReturn(cloned, scope);
       traverse(cloned, {
