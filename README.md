@@ -114,6 +114,7 @@ fix combining more than 2 macros
 - **1.0.12** new syntax for define macro, using label 
 - **1.0.13** Implement function inlining for macro arguments 
 - **1.0.14** fix for different inlined function types in macro-argument 
+- **1.0.15** fix crash for case if babel-core use same babel-traverse, but in own sub-directory (without npm dedupe) 
 
 # License
 
