@@ -3,7 +3,7 @@ import * as t from 'babel-types';
 
 export function getParentBlock(path) {
   "use strict";
-  while (path.parentPath.type !== 'Program' && path.parentPath && !path.parentPath.isStatementOrBlock()) {
+  while (path.parentPath.type !== 'Program' && path.parentPath && !(path.parentPath.isLabeledStatement() || path.parentPath.isBlockStatement())) {
     path = path.parentPath;
   }
   return path;
